@@ -1,4 +1,4 @@
-# TanStack Start with OpenAI - Implementation Summary
+# TanStack Start with Vercel AI SDK - Implementation Summary
 
 ## What Was Built
 
@@ -6,7 +6,7 @@ This project implements a complete React TanStack Start application with:
 
 1. **File-based Routing** using TanStack Router
 2. **Server-side Rendering (SSR)** capabilities
-3. **OpenAI Integration** for LLM content generation via server functions
+3. **Vercel AI SDK Integration** for LLM content generation via server functions
 4. **Modern TypeScript** setup with type safety
 
 ## Project Structure
@@ -31,7 +31,8 @@ jeffery-example/
 
 - **@tanstack/react-start** (v1.132.0) - Full-stack React framework
 - **@tanstack/react-router** (v1.132.0) - Type-safe routing
-- **openai** (v4.73.0) - OpenAI SDK for GPT integration
+- **ai** (v4.1.10) - Vercel AI SDK core
+- **@ai-sdk/openai** (v1.0.10) - OpenAI provider for Vercel AI SDK
 - **Vite** (v7.1.0) - Build tool and dev server
 - **TypeScript** (v5.7.2) - Type safety
 - **React** (v18.3.1) - UI framework
@@ -47,7 +48,7 @@ Routes are automatically generated from the `src/routes/` directory:
 The home page includes a server function that:
 - Runs exclusively on the server
 - Accepts user prompts via POST
-- Calls OpenAI's GPT-3.5 Turbo API
+- Uses Vercel AI SDK to call OpenAI's GPT-3.5 Turbo API
 - Returns generated content to the client
 - Includes proper error handling
 
@@ -84,14 +85,20 @@ The application requires an OpenAI API key:
 
 ## Architecture Highlights
 
-### Server Function Pattern
+### Server Function Pattern with Vercel AI SDK
 ```typescript
 const generateContent = createServerFn({ method: 'POST' })
   .inputValidator((data: { prompt: string }) => data)
   .handler(async ({ data }) => {
     // This code runs ONLY on the server
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    // ... OpenAI API call
+    const { openai } = await import('@ai-sdk/openai');
+    const { generateText } = await import('ai');
+    
+    const { text } = await generateText({
+      model: openai('gpt-3.5-turbo', { apiKey: process.env.OPENAI_API_KEY }),
+      prompt: data.prompt,
+    });
+    // ...
   });
 ```
 
@@ -112,11 +119,14 @@ export const Route = createFileRoute('/about')({
 - ✅ Server functions run exclusively on the server
 - ✅ Client cannot access server-only code
 - ✅ Proper error handling prevents key leakage
+- ✅ Vercel AI SDK provides additional abstraction layer
 
 ## Next Steps
 
 To extend this application, you could:
 - Add more routes in `src/routes/`
+- Implement streaming responses with Vercel AI SDK's `streamText`
+- Add more AI providers (Anthropic, Cohere, etc.) using Vercel AI SDK
 - Create additional server functions for other APIs
 - Add authentication/authorization
 - Implement streaming responses from OpenAI

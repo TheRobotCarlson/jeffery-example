@@ -1,13 +1,13 @@
 # jeffery-example
 
-A React TanStack Start application with file-based routing and OpenAI integration for server-side rendering and LLM content generation.
+A React TanStack Start application with file-based routing and OpenAI integration via Vercel AI SDK for server-side rendering and LLM content generation.
 
 ## Features
 
 - 🚀 **TanStack Start** - Modern full-stack React framework with SSR
 - 🗂️ **File-based Routing** - Automatic route generation from file structure
-- 🤖 **OpenAI Integration** - Server-side API functions for LLM content generation
-- ⚡ **Vite & Vinxi** - Lightning-fast development and build tooling
+- 🤖 **Vercel AI SDK** - Streamlined OpenAI integration for LLM content generation
+- ⚡ **Vite** - Lightning-fast development and build tooling
 - 🎨 **Type-safe** - Full TypeScript support
 
 ## Getting Started
@@ -70,17 +70,15 @@ npm run start
 
 ```
 jeffery-example/
-├── app/
+├── src/
 │   ├── routes/
 │   │   ├── __root.tsx      # Root layout component
 │   │   ├── index.tsx       # Home page with OpenAI integration
 │   │   └── about.tsx       # About page with SSR
-│   ├── client.tsx          # Client entry point
-│   ├── server.tsx          # Server entry point
 │   ├── router.tsx          # Router configuration
 │   └── routeTree.gen.ts    # Auto-generated route tree
 ├── public/                  # Static assets
-├── app.config.ts           # Vinxi configuration
+├── vite.config.ts          # Vite configuration
 ├── tsconfig.json           # TypeScript configuration
 └── package.json            # Project dependencies
 ```
@@ -89,7 +87,7 @@ jeffery-example/
 
 ### File-based Routing
 
-Routes are automatically generated from files in the `app/routes/` directory:
+Routes are automatically generated from files in the `src/routes/` directory:
 - `__root.tsx` - Root layout component for all pages
 - `index.tsx` - Home page at `/`
 - `about.tsx` - About page at `/about`
@@ -100,20 +98,26 @@ Server functions allow you to run code on the server and call it from the client
 
 ```typescript
 const generateContent = createServerFn({ method: 'POST' })
-  .validator((data: { prompt: string }) => data)
+  .inputValidator((data: { prompt: string }) => data)
   .handler(async ({ data }) => {
     // This code runs on the server
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    // ... OpenAI API call
+    const { openai } = await import('@ai-sdk/openai');
+    const { generateText } = await import('ai');
+    
+    const { text } = await generateText({
+      model: openai('gpt-3.5-turbo', { apiKey: process.env.OPENAI_API_KEY }),
+      prompt: data.prompt,
+    });
+    // ...
   });
 ```
 
-### OpenAI Integration
+### Vercel AI SDK Integration
 
-The home page demonstrates OpenAI integration with a content generator that:
+The home page demonstrates Vercel AI SDK integration with a content generator that:
 1. Takes user input as a prompt
 2. Sends it to a server function
-3. Calls OpenAI's GPT-3.5 Turbo API on the server
+3. Uses Vercel AI SDK to call OpenAI's GPT-3.5 Turbo API on the server
 4. Returns the generated content to the client
 
 ## License

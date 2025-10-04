@@ -2,11 +2,12 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { useState } from 'react';
 
-// Server function to generate content using OpenAI
+// Server function to generate content using Vercel AI SDK
 const generateContent = createServerFn({ method: 'POST' })
   .inputValidator((data: { prompt: string }) => data)
   .handler(async ({ data }) => {
-    const { OpenAI } = await import('openai');
+    const { openai } = await import('@ai-sdk/openai');
+    const { generateText } = await import('ai');
     
     const apiKey = process.env.OPENAI_API_KEY;
     
@@ -14,26 +15,21 @@ const generateContent = createServerFn({ method: 'POST' })
       throw new Error('OPENAI_API_KEY is not set in environment variables');
     }
 
-    const openai = new OpenAI({
-      apiKey: apiKey,
-    });
-
     try {
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'user',
-            content: data.prompt,
-          },
-        ],
-        max_tokens: 500,
+      const { text, usage } = await generateText({
+        model: openai('gpt-3.5-turbo', { apiKey }),
+        prompt: data.prompt,
+        maxTokens: 500,
       });
 
       return {
         success: true,
-        content: completion.choices[0]?.message?.content || 'No response generated',
-        usage: completion.usage,
+        content: text || 'No response generated',
+        usage: {
+          promptTokens: usage.promptTokens,
+          completionTokens: usage.completionTokens,
+          totalTokens: usage.totalTokens,
+        },
       };
     } catch (error) {
       console.error('OpenAI API error:', error);
@@ -88,7 +84,7 @@ function Home() {
           <h1>OpenAI Content Generator</h1>
           <p style={{ marginBottom: '1.5rem', color: '#666' }}>
             Enter a prompt below to generate content using OpenAI's GPT-3.5 Turbo model.
-            This demonstrates server-side rendering with TanStack Start and OpenAI integration.
+            This demonstrates server-side rendering with TanStack Start and Vercel AI SDK integration.
           </p>
           
           <textarea
@@ -133,7 +129,7 @@ function Home() {
             <li>File-based routing with TanStack Router</li>
             <li>Server-side rendering (SSR)</li>
             <li>Server functions for API calls</li>
-            <li>OpenAI integration for LLM content generation</li>
+            <li>Vercel AI SDK integration for LLM content generation</li>
           </ul>
         </div>
       </div>
